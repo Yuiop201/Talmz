@@ -1,16 +1,19 @@
-const FREQ_0 = 13200; // frequency for 0
-const FREQ_1 = 15000; // frequency for 1
-const BIT_DURATION = 250; // ms
+const TONE_FREQ = 1000; // 1 kHz
+const BIT_0 = 150; // ms
+const BIT_1 = 300; // ms
+const BIT_GAP = 100; // ms between bits
 
-function playFreq(freq) {
+function playTone(duration) {
   const ctx = new AudioContext();
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
-  osc.frequency.value = freq;
+
+  osc.frequency.value = TONE_FREQ;
   gain.gain.value = 0.3;
+
   osc.connect(gain).connect(ctx.destination);
   osc.start();
-  osc.stop(ctx.currentTime + BIT_DURATION / 1000);
+  osc.stop(ctx.currentTime + duration / 1000);
 }
 
 function textToBinary(text) {
@@ -27,8 +30,8 @@ function sendText() {
 
   let delay = 0;
   for (const bit of binary) {
-    const freq = bit === '0' ? FREQ_0 : FREQ_1;
-    setTimeout(() => playFreq(freq), delay);
-    delay += BIT_DURATION;
+    const duration = bit === '0' ? BIT_0 : BIT_1;
+    setTimeout(() => playTone(duration), delay);
+    delay += duration + BIT_GAP;
   }
 }

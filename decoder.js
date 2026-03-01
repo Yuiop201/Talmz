@@ -1,34 +1,60 @@
-const FREQ_0 = 13200; // frequency for 0
-const FREQ_1 = 15000; // frequency for 1
-const BIT_DURATION = 250; // ms
+const TONE_FREQ = 1000;
+const THRESHOLD = 0.01; // amplitude threshold
 
-function playFreq(freq) {
-  const ctx = new AudioContext();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.frequency.value = freq;
-  gain.gain.value = 0.3;
-  osc.connect(gain).connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + BIT_DURATION / 1000);
-}
+let receivedBits = '';
+let receivedText = '';
 
-function textToBinary(text) {
-  let binary = '';
-  for (const char of text) {
-    binary += char.charCodeAt(0).toString(2).padStart(8, '0');
+async function startDecoding() {
+  const audioCtx = new AudioContext();
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+  const source = audioCtx.createMediaStreamSource(stream);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  source.connect(analyser);
+
+  let detecting = false;
+  let startTime = 0;
+
+  function detect() {
+    analyser.getByteTimeDomainData(dataArray);
+
+    // simple amplitude detection
+    let sum = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      sum += Math.abs(dataArray[i] - 128);
+    }
+
+    const amp = sum / dataArray.length;
+
+    if (amp > THRESHOLD * 128) {
+      if (!detecting) {
+        detecting = true;
+        startTime = performance.now();
+      }
+    } else {
+      if (detecting) {
+        const duration = performance.now() - startTime;
+        receivedBits += duration > 200 ? '1' : '0';
+
+        // convert every 8 bits
+        while (receivedBits.length >= 8) {
+          const byte = receivedBits.slice(0, 8);
+          receivedBits = receivedBits.slice(8);
+          receivedText += String.fromCharCode(parseInt(byte, 2));
+          document.getElementById('output').innerText = receivedText;
+        }
+
+        detecting = false;
+      }
+    }
+
+    requestAnimationFrame(detect);
   }
-  return binary;
+
+  detect();
 }
 
-function sendText() {
-  const text = prompt("Enter text (ASCII)").toUpperCase();
-  const binary = textToBinary(text);
-
-  let delay = 0;
-  for (const bit of binary) {
-    const freq = bit === '0' ? FREQ_0 : FREQ_1;
-    setTimeout(() => playFreq(freq), delay);
-    delay += BIT_DURATION;
-  }
-}
+document.getElementById('start').onclick = startDecoding;
