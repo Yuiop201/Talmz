@@ -1,25 +1,33 @@
+const freqMap = {
+  A:13200, B:13400, C:13600, D:13800, E:14000,
+  F:14200, G:14400, H:14600, I:14800, J:15000,
+  K:15200, L:15400, M:15600, N:15800, O:16000
+};
+
 function playFreq(freq) {
   const ctx = new AudioContext();
   const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
   osc.frequency.value = freq;
-  osc.connect(ctx.destination);
+  gain.gain.value = 0.3;
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
   osc.start();
   osc.stop(ctx.currentTime + 0.2);
 }
 
 function startEncoding() {
-  const text = prompt("Enter text:").toUpperCase();
-  const freqMap = {
-    A:18000,B:18100,C:18200,D:18300,E:18400,F:18500,G:18600,
-    H:18700,I:18800,J:18900,K:19000,L:19100,M:19200,N:19300,
-    O:19400,P:19500,Q:19600,R:19700,S:19800,T:19900,U:20000,
-    V:20100,W:20200,X:20300,Y:20400,Z:20500
-  };
-
+  const text = prompt("Enter text (A–O)").toUpperCase();
+  
   let delay = 0;
-  for (const letter of text) {
-    const freq = freqMap[letter];
-    if (freq) setTimeout(() => playFreq(freq), delay);
-    delay += 250;
+  for (const char of text) {
+    const freq = freqMap[char];
+    if (freq) {
+      setTimeout(() => playFreq(freq), delay);
+      delay += 300; // 300ms spacing for clarity
+    }
   }
 }

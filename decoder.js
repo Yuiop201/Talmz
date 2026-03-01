@@ -1,17 +1,17 @@
 const freqMap = {
-  18000:'A',18100:'B',18200:'C',18300:'D',18400:'E',
-  18500:'F',18600:'G',18700:'H',18800:'I',18900:'J',
-  19000:'K',19100:'L',19200:'M',19300:'N',19400:'O',
-  19500:'P',19600:'Q',19700:'R',19800:'S',19900:'T',
-  20000:'U',20100:'V',20200:'W',20300:'X',20400:'Y',20500:'Z'
+  13200:'A', 13400:'B', 13600:'C', 13800:'D', 14000:'E',
+  14200:'F', 14400:'G', 14600:'H', 14800:'I', 15000:'J',
+  15200:'K', 15400:'L', 15600:'M', 15800:'N', 16000:'O'
 };
 
 let receivedText = "";
 
 async function startDecoding() {
-  document.getElementById("output").innerText = "Decoder running...";	
   const audioCtx = new AudioContext();
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+  document.getElementById("output").innerText = "Decoder running...";
+
   const source = audioCtx.createMediaStreamSource(stream);
   const analyser = audioCtx.createAnalyser();
   analyser.fftSize = 4096;
@@ -19,7 +19,7 @@ async function startDecoding() {
   const dataArray = new Uint8Array(analyser.frequencyBinCount);
   source.connect(analyser);
 
-  function detectFrequency() {
+  function detectFreq() {
     analyser.getByteFrequencyData(dataArray);
 
     let maxAmp = 0;
@@ -34,26 +34,31 @@ async function startDecoding() {
 
     const freq = maxIndex * (audioCtx.sampleRate / analyser.fftSize);
 
-    let closest = null;
-    let minDiff = Infinity;
+    // Find best match among 13200–16000
+    let bestFreq = null;
+    let minDiff = 9999;
 
     for (let f in freqMap) {
       let diff = Math.abs(freq - f);
       if (diff < minDiff) {
         minDiff = diff;
-        closest = f;
+        bestFreq = f;
       }
     }
 
-    if (maxAmp > 120 && minDiff < 30) {
-      receivedText += freqMap[closest];
-      document.getElementById("output").innerText = receivedText;
+    // threshold rules
+    if (maxAmp > 100 && minDiff < 120) {
+      const char = freqMap[bestFreq];
+      if (char) {
+        receivedText += char;
+        document.getElementById("output").innerText = receivedText;
+      }
     }
 
-    requestAnimationFrame(detectFrequency);
+    requestAnimationFrame(detectFreq);
   }
 
-  detectFrequency();
+  detectFreq();
 }
 
 document.getElementById("start").onclick = startDecoding;
