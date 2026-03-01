@@ -9,6 +9,7 @@ const freqMap = {
 let receivedText = "";
 
 async function startDecoding() {
+  document.getElementById("output").innerText = "Decoder running...";	
   const audioCtx = new AudioContext();
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   const source = audioCtx.createMediaStreamSource(stream);
