@@ -1,33 +1,34 @@
-const freqMap = {
-  A:13200, B:13400, C:13600, D:13800, E:14000,
-  F:14200, G:14400, H:14600, I:14800, J:15000,
-  K:15200, L:15400, M:15600, N:15800, O:16000
-};
+const FREQ_0 = 13200; // frequency for 0
+const FREQ_1 = 15000; // frequency for 1
+const BIT_DURATION = 250; // ms
 
 function playFreq(freq) {
   const ctx = new AudioContext();
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
-
   osc.frequency.value = freq;
   gain.gain.value = 0.3;
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
+  osc.connect(gain).connect(ctx.destination);
   osc.start();
-  osc.stop(ctx.currentTime + 0.2);
+  osc.stop(ctx.currentTime + BIT_DURATION / 1000);
 }
 
-function startEncoding() {
-  const text = prompt("Enter text (A–O)").toUpperCase();
-  
-  let delay = 0;
+function textToBinary(text) {
+  let binary = '';
   for (const char of text) {
-    const freq = freqMap[char];
-    if (freq) {
-      setTimeout(() => playFreq(freq), delay);
-      delay += 300; // 300ms spacing for clarity
-    }
+    binary += char.charCodeAt(0).toString(2).padStart(8, '0');
+  }
+  return binary;
+}
+
+function sendText() {
+  const text = prompt("Enter text (ASCII)").toUpperCase();
+  const binary = textToBinary(text);
+
+  let delay = 0;
+  for (const bit of binary) {
+    const freq = bit === '0' ? FREQ_0 : FREQ_1;
+    setTimeout(() => playFreq(freq), delay);
+    delay += BIT_DURATION;
   }
 }
