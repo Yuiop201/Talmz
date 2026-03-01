@@ -1,15 +1,27 @@
 <!DOCTYPE html>
-<html>
-<head><title>Talmz</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Talmz Binary Audio Messenger</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    button { margin: 5px; padding: 10px 20px; font-size: 16px; }
+    #output { margin-top: 20px; font-size: 24px; color: #333; }
+  </style>
+</head>
 <body>
-<h1>Talmz Ultrasonic Messenger</h1>
-<button onclick="startEncoding()">Send</button>
-<button id="start">Start Decoding</button>
+  <h1>Talmz Binary Audio Messenger</h1>
 
-<h2>Received:</h2>
-<div id="output" style="font-size:24px;"></div>
+  <div>
+    <button onclick="sendText()">Send Text</button>
+    <button id="start">Start Decoding</button>
+  </div>
 
-<script src="encoder.js"></script>
-<script src="decoder.js"></script>
+  <h2>Received Text:</h2>
+  <div id="output"></div>
+
+  <!-- Include encoder and decoder scripts -->
+  <script src="encoder.js"></script>
+  <script src="decoder.js"></script>
 </body>
 </html>
